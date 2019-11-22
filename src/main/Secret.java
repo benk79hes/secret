@@ -1,9 +1,8 @@
-package com.company;
+package main;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.nio.*;
 
 public class Secret
 {
