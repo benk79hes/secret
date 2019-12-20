@@ -1,42 +1,90 @@
 package main;
 
 import java.math.BigInteger;
-import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Random;
+import java.security.SecureRandom;
 
 public class Secret
 {
-	private String name;
 	private BigInteger secret;
+	private int byteLength;
+	private int level;
+
+	private BigInteger modularBase;
 	private ArrayList<BigInteger> yList = new ArrayList<>() ;
 	private ArrayList<BigInteger> xList = new ArrayList<>() ;
 	private ArrayList<BigInteger> coeff = new ArrayList<>() ;
-	private int level;
+
 
 	public Secret()
 	{
-		generateRandomKey(16);
-
-		generateMainFunction(4);
-
-		makeNewPoint();
-		makeNewPoint();
-		makeNewPoint();
-		makeNewPoint();
-		makeNewPoint();
-		makeNewPoint();
-		showPoints();
 	}
 
-	public Secret(String name)
+	public void generateSecret(int byteLength, int level)
 	{
+		if (byteLength < 16 || byteLength > 512)
+			throw new IllegalArgumentException("La clé doit être entre 16 et 512 bytes");
+
+		this.byteLength = byteLength;
+		this.level = level;
+
+		Random rnd = new Random();
+
+		modularBase = BigInteger.probablePrime(this.byteLength, rnd);
+
+		int attempts = 0;
+		do {
+			secret = generateRandomNumber();
+			attempts++;
+		} while (modularBase.compareTo(secret) != 1 && !secret.testBit(0));
+
+		generateMainFunction();
 
 	}
 
-	public void setName()
+
+	private BigInteger generateRandomNumber() throws IllegalArgumentException {
+		SecureRandom random = new SecureRandom();
+		byte bytes[] = new byte[byteLength]; // 128 bits are converted to 16 bytes;
+		random.nextBytes(bytes);
+		return new BigInteger(bytes);
+	}
+
+
+
+	public void generateMainFunction()
 	{
+		coeff.add(secret);
 
+		SecureRandom random = new SecureRandom();
+		byte bytes[] = new byte[16];
+
+		for (int i = 0; i < level; i++) {
+			random.nextBytes(bytes);
+			coeff.add(new BigInteger(bytes));
+		}
 	}
+
+
+	public void makeNewPoint()
+	{
+		BigInteger newX, newY;
+		byte[] newBytes = new byte[16];
+		SecureRandom random = new SecureRandom();
+
+		do {
+			random.nextBytes(newBytes);
+			newX = new BigInteger(newBytes);
+		}
+		while (xList.contains(newX));
+
+		xList.add(newX);
+		newY = computeY(newX);
+		yList.add(newY);
+	}
+
+
 
 	/**
 	 *	INPUT a, b element de Z avec a >= b
@@ -107,7 +155,6 @@ public class Secret
 			multInverse = multInverse.add(a);
 		}
 
-
 		return multInverse;
 	}
 
@@ -123,52 +170,9 @@ public class Secret
 	}
 
 
-	public void generateRandomKey(int byteLength) throws IllegalArgumentException {
-		if (byteLength < 16 || byteLength > 512)
-			throw new IllegalArgumentException("La clé doit être entre 16 et 512 bytes");
-
-		SecureRandom random = new SecureRandom();
-		byte bytes[] = new byte[byteLength]; // 128 bits are converted to 16 bytes;
-		random.nextBytes(bytes);
-		secret = new BigInteger(bytes);
-
-		System.out.println("Secret: " + secret);
-		System.out.println("**********************************");
-
-	}
 
 
 
-	public void generateMainFunction(int level)
-	{
-		this.level = level;
-		coeff.add(secret);
-
-		SecureRandom random = new SecureRandom();
-		byte bytes[] = new byte[16];
-
-		for (int i = 0; i < level; i++) {
-			random.nextBytes(bytes);
-			coeff.add(new BigInteger(bytes));
-		}
-	}
-
-	public void makeNewPoint()
-	{
-		BigInteger newX, newY;
-		byte[] newBytes = new byte[16];
-		SecureRandom random = new SecureRandom();
-
-		do {
-			random.nextBytes(newBytes);
-			newX = new BigInteger(newBytes);
-		}
-		while (xList.contains(newX));
-
-		xList.add(newX);
-		newY = computeY(newX);
-		yList.add(newY);
-	}
 
 	public BigInteger computeY(BigInteger x)
 	{
