@@ -6,6 +6,8 @@ public class Main {
 	// write your code here
         if (args.length == 0)
             CommandLineInterface.showMainMenu();
+
+
     }
 
 }

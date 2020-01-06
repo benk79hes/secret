@@ -1,176 +1,135 @@
 package main;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Random;
 import java.security.SecureRandom;
 
+import static main.FileUtilities.saveMetadata;
+import static main.FileUtilities.saveToFile;
+
 public class Secret
 {
 	private BigInteger secret;
-	private int byteLength;
-	private int level;
+	//private int byteLength;
+	//private int level;
+	private Metadata metadata;
 
-	private BigInteger modularBase;
+	//private BigInteger modularBase;
 	private ArrayList<BigInteger> yList = new ArrayList<>() ;
 	private ArrayList<BigInteger> xList = new ArrayList<>() ;
 	private ArrayList<BigInteger> coeff = new ArrayList<>() ;
 
 
-	public Secret()
-	{
-	}
-
-	public void generateSecret(int byteLength, int level)
+	public Secret(int byteLength, int level, int shares)
 	{
 		if (byteLength < 16 || byteLength > 512)
 			throw new IllegalArgumentException("La clé doit être entre 16 et 512 bytes");
 
-		this.byteLength = byteLength;
-		this.level = level;
 
 		Random rnd = new Random();
 
-		modularBase = BigInteger.probablePrime(this.byteLength, rnd);
+		metadata = new Metadata();
+		metadata.base = BigInteger.probablePrime(byteLength * 8, rnd);
+		metadata.level = level;
+		metadata.byteLength = byteLength;
+		metadata.shares = shares;
 
-		int attempts = 0;
+		try {
+			saveMetadata("C:/temp/secret/", metadata);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public Secret(Metadata metadata)
+	{
+		this.metadata = metadata;
+	}
+
+	public void generateSecret()
+	{
+		// int attempts = 0;
 		do {
 			secret = generateRandomNumber();
-			attempts++;
-		} while (modularBase.compareTo(secret) != 1 && !secret.testBit(0));
+			// attempts++;
+		}
+		while (!validSecret(secret));
 
+		save("secret.shs", secret);
 		generateMainFunction();
-
+		generateShares();
 	}
 
 
-	private BigInteger generateRandomNumber() throws IllegalArgumentException {
+	private boolean validSecret(BigInteger s)
+	{
+		if (metadata.base.compareTo(secret) < 1)
+			return false;
+
+		if (secret.bitLength() < metadata.byteLength * 8)
+			return false;
+
+		return true;
+	}
+
+
+	private BigInteger generateRandomNumber() {
 		SecureRandom random = new SecureRandom();
-		byte bytes[] = new byte[byteLength]; // 128 bits are converted to 16 bytes;
+		byte bytes[] = new byte[metadata.byteLength]; // 128 bits are converted to 16 bytes;
 		random.nextBytes(bytes);
-		return new BigInteger(bytes);
+		return new BigInteger(1, bytes);
 	}
 
 
-
-	public void generateMainFunction()
+	/**
+	 * Génère les coefficients de la fonction polynomiale
+	 *
+	 */
+	private void generateMainFunction()
 	{
 		coeff.add(secret);
 
-		SecureRandom random = new SecureRandom();
-		byte bytes[] = new byte[16];
+		for (int i = 0; i < metadata.level; i++) {
+			BigInteger c = generateRandomNumber();
+			if (metadata.base.compareTo(c) < 1) {
+				c = c.mod(metadata.base);
+			}
 
-		for (int i = 0; i < level; i++) {
-			random.nextBytes(bytes);
-			coeff.add(new BigInteger(bytes));
+			coeff.add(c);
 		}
 	}
 
 
-	public void makeNewPoint()
+	private void generateShares()
+	{
+		System.out.println("Créations de parts: " + metadata.shares);
+		//return;
+		for (int i = 1; i <= metadata.shares; i++) {
+			makeNewPoint(BigInteger.valueOf(i));
+		}
+	}
+
+
+	/**
+	 * Génère une nouvelle part en fonction
+	 *
+	 *
+	 */
+	private void makeNewPoint(BigInteger keyId)
 	{
 		BigInteger newX, newY;
-		byte[] newBytes = new byte[16];
-		SecureRandom random = new SecureRandom();
-
-		do {
-			random.nextBytes(newBytes);
-			newX = new BigInteger(newBytes);
-		}
-		while (xList.contains(newX));
+		newX = keyId;
 
 		xList.add(newX);
 		newY = computeY(newX);
-		yList.add(newY);
+		BigInteger share = newY.mod(metadata.base);
+
+		save("share" + keyId + ".shs", share);
+		System.out.println("Secret share " + keyId + "    " + share.toString(2));
+		yList.add(share);
 	}
-
-
-
-	/**
-	 *	INPUT a, b element de Z avec a >= b
-	 *	OUTPUT g = gcd(a, b)
-	 */
-	public static int gcd(int a, int b)
-	{
-		if (b > a)
-			return gcd(b, a);
-
-		int q, r, g;
-
-		r = b;
-		do {
-			g = r;
-
-			q = a / b;
-			r = a - b * q;
-
-			// prepare for next iteration
-			a = b;
-			b = r;
-
-		} while (r > 0);
-
-		return g;
-	}
-
-	/**
-	 *	INPUT a, b element de Z avec a >= b
-	 *	OUTPUT g = gcd(a, b)
-	 */
-	public static BigInteger multipleInverse(BigInteger a, BigInteger b)
-	{
-		ArrayList<BigInteger> r = new ArrayList<>();
-		ArrayList<BigInteger> q = new ArrayList<>();
-		ArrayList<BigInteger> x = new ArrayList<>();
-		ArrayList<BigInteger> y = new ArrayList<>();
-
-		r.add(a);
-		r.add(b);
-
-		x.add(BigInteger.valueOf(1));
-		x.add(BigInteger.ZERO);
-
-		q.add(BigInteger.ZERO);
-		y.add(BigInteger.ZERO);
-		y.add(BigInteger.valueOf(1));
-
-		int i = 0;
-
-		do {
-			i++;
-
-			q.add(i, r.get(i-1).divide(r.get(i)));
-
-			r.add(i+1, r.get(i-1).subtract(r.get(i).multiply(q.get(i))));
-
-			x.add(i+1, x.get(i-1).subtract(x.get(i).multiply(q.get(i))));
-			y.add(i+1, y.get(i-1).subtract(y.get(i).multiply(q.get(i))));
-
-		}
-		while (r.get(i+1).compareTo(BigInteger.ZERO) > 0) ;
-
-		BigInteger multInverse = y.get(i);
-
-		while (multInverse.compareTo(BigInteger.ZERO) < 0) {
-			multInverse = multInverse.add(a);
-		}
-
-		return multInverse;
-	}
-
-	public static void printBiginteger(ArrayList<BigInteger> r)
-	{
-
-		for (BigInteger n : r) {
-			System.out.print("\t" + n.toString());
-
-		}
-
-		System.out.println();
-	}
-
-
-
 
 
 
@@ -180,6 +139,9 @@ public class Secret
 
 		y = BigInteger.valueOf(0);
 
+		/**
+		 * @todo Replace with Horner
+		 */
 		for (int i = 0; i < coeff.size(); i++) {
 			BigInteger c = coeff.get(i);
 			y = y.add(c.multiply(x.pow(i)));
@@ -188,14 +150,16 @@ public class Secret
 		return y;
 	}
 
-	public void showPoints()
+
+	public void save(String fn, BigInteger value)
 	{
-		for (int i = 0; i < xList.size(); i++) {
-			System.out.println("x: " + xList.get(i));
-			System.out.println("y: " + yList.get(i));
-			System.out.println("---------------------------------------------");
+		try {
+			saveToFile("C:/temp/secret/" + fn, value);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
+
 
 
 }
