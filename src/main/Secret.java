@@ -8,7 +8,7 @@ import java.util.Random;
 import java.security.SecureRandom;
 
 import static main.FileUtilities.*;
-import static main.MathUtilities.multipleInverse;
+import static main.MathUtilities.*;
 
 public class Secret
 {
@@ -68,7 +68,7 @@ public class Secret
 		if (shares.size() < metadata.level)
 			throw new MissingSharesException();
 
-		secret = computeYLagrange(BigInteger.ZERO, shares);
+		secret = computeYLagrange(BigInteger.ZERO, shares, metadata.base);
 
 	}
 
@@ -88,7 +88,7 @@ public class Secret
 
 		Share share = new Share();
 		share.setX(BigInteger.valueOf(metadata.shares));
-		share.setY(computeYLagrange (share.getX(), shares));
+		share.setY(computeYLagrange (share.getX(), shares, metadata.base));
 		saveData("new.share." + metadata.shares + ".ssh", share);
 		saveData("meta.smd", metadata);
 	}
@@ -175,39 +175,6 @@ public class Secret
 		return y.mod(metadata.base);
 	}
 
-
-	private BigInteger computeYLagrange(BigInteger x, ArrayList<Share> shares)
-	{
-		BigInteger result = BigInteger.ZERO;
-		for(int i = 0; i < shares.size(); i++) {
-			BigInteger rv = BigInteger.ONE;
-
-			for (int j = 0; j < shares.size() ; j++) {
-				if (j == i)
-					continue;
-
-				BigInteger xi = shares.get(i).getX();
-				BigInteger xj = shares.get(j).getX();
-
-				BigInteger inv = modularSubstract(xi, xj, metadata.base).modInverse(metadata.base);
-
-				rv = rv.multiply(modularSubstract(x, xj, metadata.base)).multiply(inv).mod(metadata.base);
-			}
-
-			result = result.add(rv.multiply(shares.get(i).getY())).mod(metadata.base);
-		}
-
-		return result;
-	}
-
-	private BigInteger modularSubstract(BigInteger n1, BigInteger n2, BigInteger base)
-	{
-		BigInteger result = n1.subtract(n2);
-		if (result.compareTo(BigInteger.ZERO) < 0)
-			result = result.add(base);
-
-		return result;
-	}
 
 
 	public void saveData(String fn, Serializable object)

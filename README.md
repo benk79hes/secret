@@ -1,9 +1,21 @@
 # Shamir’s secret sharing
 
-## Utilisation
+## Guide d'utilisation
 
 Le programme génère un secret, des métadonnées et les parts dans des fichiers
-dans un répertoire
+dans un répertoire. Il suffit de lancer le programme et les instructions se trouveront
+dans la console
+
+
+## Bibliothèque mathématique
+
+Une petite bibliothèque mathématique à été créée pour l'occasion.
+
+Elle contient les fonction suivantes:
+
+- Soustraction modulaire
+- Interpolation de Lagrange
+- Inverse modulaire
 
 
 ## Donnée de base

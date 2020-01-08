@@ -52,8 +52,10 @@ public class CommandLineInterface
 		int nbBites = 0;
 		int[] biteOptions = {128,256,512,4096};
 
-		//choix de bits
 
+		/**
+		 * Choix nombre de bits
+		 */
 		System.out.println("Veuillez choisir le nombre de bits");
 		System.out.println("128  - 128 bits");
 		System.out.println("256  - 256 bits");
@@ -65,11 +67,10 @@ public class CommandLineInterface
 		}
 		while (Arrays.binarySearch(biteOptions, nbBites) < 0);
 
-		// System.out.println(nbBites);
 
-		//choix de nombre de personnes
-
-
+		/**
+		 * Choix nombre de personnes
+		 */
 		System.out.println("Combiens de personnes sont nécessaires pour retrouver le secret?");
 
 		int nbPersonnes = 0;
@@ -81,8 +82,9 @@ public class CommandLineInterface
 		while (nbPersonnes < 2);
 
 
-		//choix nombre de parts de secret voulue
-
+		/**
+		 * Choix nombre de parts de secret voulue
+		 */
 		System.out.println("Choisissez le nombre de part de secret voulu");
 
 
@@ -109,7 +111,6 @@ public class CommandLineInterface
 
 
 		Secret s = new Secret(path, nbBites / 8, nbPersonnes, nbParts);
-
 
 
 		s.generateSecret();
