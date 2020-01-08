@@ -4,6 +4,7 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class FileUtilities
 {
@@ -35,18 +36,18 @@ public class FileUtilities
 	/**
 	 * This method is used to read data from file and return deserialized object.
 	 *
-	 * @param path
+	 * @param fn
 	 * @return Metadata
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public static Metadata getMetadata (String path) throws IOException, ClassNotFoundException
+	public static Object getObject (String fn) throws IOException, ClassNotFoundException
 	{
-		FileInputStream fileInputStream = new FileInputStream(path + "/metadata.shs");
+		FileInputStream fileInputStream = new FileInputStream(fn);
 		BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
 		ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
 
-		Metadata object = (Metadata)objectInputStream.readObject();
+		Object object = objectInputStream.readObject();
 
 		objectInputStream.close();
 
@@ -57,17 +58,45 @@ public class FileUtilities
 	/**
 	 * This method is used to write serialized data to file
 	 *
-	 * @param path
+	 * @param fn
 	 * @param object
 	 * @throws IOException When the file can not be written
 	 */
-	public static void saveMetadata (String path, Metadata object) throws IOException
+	public static void saveObject (String fn, Serializable object) throws IOException
 	{
-		FileOutputStream fileOutputStream = new FileOutputStream(path + "/metadata.shs");
+		FileOutputStream fileOutputStream = new FileOutputStream(fn);
 		BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(fileOutputStream);
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(bufferedOutputStream);
 		objectOutputStream.writeObject(object);
 		objectOutputStream.close();
+	}
+
+
+	public static ArrayList<Share> getFolderShares()
+	{
+		String[] pathnames;
+		ArrayList<Share> shares = new ArrayList<>();
+		File f = new File("C:/temp/secret");
+		pathnames = f.list();
+
+		for (String pathname : pathnames) {
+			// Print the names of files and directories
+			if (! pathname.toLowerCase().endsWith(".ssh"))
+				continue;
+
+			Share share = null;
+			try {
+				share = (Share) getObject("C:/temp/secret" + "/" + pathname);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+
+			shares.add(share);
+			System.out.println(pathname);
+		}
+		return shares;
 	}
 
 }

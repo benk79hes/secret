@@ -5,8 +5,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import static main.FileUtilities.getMetadata;
-import static main.FileUtilities.validSecretPath;
+import static main.FileUtilities.*;
 
 public class CommandLineInterface
 {
@@ -33,7 +32,7 @@ public class CommandLineInterface
 				generateMenu();
 				break;
 			case 2:
-
+				getSecretMenu();
 				break;
 		}
 	}
@@ -105,7 +104,7 @@ public class CommandLineInterface
 		System.out.println("Indiquez le répertoire contenant les fichiers meta ainsi que les parts de secret");
 
 		String path = "C:/temp/secret";
-		Metadata md = null;
+		// Metadata md = null;
 /*
 		do {
 			System.out.print("Dossier: ");
@@ -113,15 +112,17 @@ public class CommandLineInterface
 		}
 		while (! validSecretPath(path));*/
 
-		try {
-			md = getMetadata(path);
+/*		try {
+			md = getData(path);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-		}
+		} */
 
-		Secret s = new Secret(md);
+		Secret s = new Secret(path);
+		s.find();
+
 		//s.find();
 	}
 

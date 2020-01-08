@@ -1,13 +1,14 @@
 package main;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Random;
 import java.security.SecureRandom;
 
-import static main.FileUtilities.saveMetadata;
-import static main.FileUtilities.saveToFile;
+import static main.FileUtilities.*;
+import static main.MathUtilities.multipleInverse;
 
 public class Secret
 {
@@ -16,9 +17,11 @@ public class Secret
 	//private int level;
 	private Metadata metadata;
 
+	private String path = "C:/temp/secret";
+
 	//private BigInteger modularBase;
-	private ArrayList<BigInteger> yList = new ArrayList<>() ;
-	private ArrayList<BigInteger> xList = new ArrayList<>() ;
+	//private ArrayList<BigInteger> yList = new ArrayList<>() ;
+	//private ArrayList<BigInteger> xList = new ArrayList<>() ;
 	private ArrayList<BigInteger> coeff = new ArrayList<>() ;
 
 
@@ -36,16 +39,14 @@ public class Secret
 		metadata.byteLength = byteLength;
 		metadata.shares = shares;
 
-		try {
-			saveMetadata("C:/temp/secret/", metadata);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		saveData("meta.smd", metadata);
 	}
 
-	public Secret(Metadata metadata)
+	public Secret(String path)
 	{
-		this.metadata = metadata;
+		System.out.println("Charger les métadonnées");
+		this.metadata = (Metadata) getData("meta.smd");
+		System.out.println("Base: " + metadata.base.toString());
 	}
 
 	public void generateSecret()
@@ -57,9 +58,21 @@ public class Secret
 		}
 		while (!validSecret(secret));
 
-		save("secret.shs", secret);
+		System.out.println(secret.toString());
+		//
+		saveData("secret.shs", secret);
+
 		generateMainFunction();
 		generateShares();
+	}
+
+
+	public void find()
+	{
+		System.out.println("Chercher les parts dans le dossier" + metadata.shares);
+		ArrayList<Share> shares = getFolderShares();
+
+		computeYLagrange (BigInteger.ZERO, shares);
 	}
 
 
@@ -107,28 +120,25 @@ public class Secret
 		System.out.println("Créations de parts: " + metadata.shares);
 		//return;
 		for (int i = 1; i <= metadata.shares; i++) {
-			makeNewPoint(BigInteger.valueOf(i));
+			makeNewShare(BigInteger.valueOf(i));
 		}
 	}
 
 
 	/**
-	 * Génère une nouvelle part en fonction
-	 *
-	 *
+	 * Génère une nouvelle part du secret
 	 */
-	private void makeNewPoint(BigInteger keyId)
+	private void makeNewShare(BigInteger keyId)
 	{
 		BigInteger newX, newY;
-		newX = keyId;
+		Share share = new Share();
 
-		xList.add(newX);
-		newY = computeY(newX);
-		BigInteger share = newY.mod(metadata.base);
+		//
+		share.setX(keyId);
+		share.setY(computeY(share.getX()));
 
-		save("share" + keyId + ".shs", share);
-		System.out.println("Secret share " + keyId + "    " + share.toString(2));
-		yList.add(share);
+		//
+		saveData("share" + keyId + ".ssh", share);
 	}
 
 
@@ -147,19 +157,108 @@ public class Secret
 			y = y.add(c.multiply(x.pow(i)));
 		}
 
-		return y;
+		return y.mod(metadata.base);
 	}
 
 
-	public void save(String fn, BigInteger value)
+	private void computeYLagrange(BigInteger x, ArrayList<Share> shares)
+	{
+		// ArrayList<BigInteger> cf;
+		BigInteger result = BigInteger.ZERO;
+		for(int i = 0; i < shares.size(); i++) {
+			BigInteger fix = null;
+			BigInteger rv = BigInteger.ONE;
+
+			for (int j = 0; j < shares.size() ; j++) {
+				//Share shareI =
+				BigInteger t;
+				if (j == i)
+					continue;
+
+				BigInteger xi = shares.get(i).getX();
+				BigInteger xj = shares.get(j).getX();
+				// BigInteger inv = multipleInverse(xi.subtract(xj), metadata.base);
+				//t = xi.subtract(xj);
+				//if (t.compareTo(BigInteger.ZERO) < 0)
+				//	t.add(metadata.base);
+
+				BigInteger inv = modularSubstract(xi, xj, metadata.base).modInverse(metadata.base);
+
+
+				//t =
+				//rv = rv.multiply(x.subtract(xj)).multiply(inv).mod(metadata.base);
+				rv = rv.multiply(modularSubstract(x, xj, metadata.base)).multiply(inv).mod(metadata.base);
+			}
+
+			result = result.add(rv.multiply(shares.get(i).getY())).mod(metadata.base);
+		}
+
+		System.out.println(result.toString());
+	}
+
+	private BigInteger modularSubstract(BigInteger n1, BigInteger n2, BigInteger base)
+	{
+		BigInteger result = n1.subtract(n2);
+		if (result.compareTo(BigInteger.ZERO) < 0)
+			result.add(base);
+
+		return result;
+	}
+
+
+	/**
+	 * f (x) = y0`0(x) + y1`1(x) + y2`2(x) + y3`3(x)
+	 *
+	 * @return
+	 */
+	 /*public byte[] calculateLagrange(ShamirKey[] sk){
+
+		BigInteger d;
+		BigInteger D;
+		BigInteger c;
+		BigInteger S = BigInteger.ZERO;
+		for(int i = 0; i < sk.length; i++){
+			BigInteger d = BigInteger.ONE;
+			D = BigInteger.ONE;
+			for(int j = 0; j < sk.length; j++){
+				if(j==i)
+					continue;
+
+				d = d.multiply(sk[j].getX());
+
+				D = D.multiply(sk[j].getX().subtract(sk[i].getX()));
+			}
+
+			c = d.multiply(D.modInverse(metadata.base)).mod(metadata.base);
+			S = S.add(c.multiply(sk[i].getF())).mod(metadata.base);
+		}
+		return S.toByteArray();
+	}*/
+
+
+
+	public void saveData(String fn, Serializable object)
 	{
 		try {
-			saveToFile("C:/temp/secret/" + fn, value);
-		} catch (Exception e) {
+			saveObject(path + "/" + fn, object);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 
+	public Object getData(String fn)
+	{
+		Object object = null;
+		try {
+			object = getObject(path + "/" + fn);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		return object;
+	}
 
 }
