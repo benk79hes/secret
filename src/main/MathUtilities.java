@@ -3,15 +3,13 @@ package main;
 import java.math.BigInteger;
 import java.util.ArrayList;
 
-public class MathUtilities
+class MathUtilities
 {
-
-
 	/**
 	 *	INPUT a, b element de Z avec a >= b
 	 *	OUTPUT g = gcd(a, b)
 	 */
-	public static BigInteger multipleInverse(BigInteger a, BigInteger b)
+	static BigInteger multipleInverse(BigInteger a, BigInteger b)
 	{
 		ArrayList<BigInteger> r = new ArrayList<>();
 		ArrayList<BigInteger> q = new ArrayList<>();
@@ -51,5 +49,4 @@ public class MathUtilities
 
 		return multInverse;
 	}
-
 }

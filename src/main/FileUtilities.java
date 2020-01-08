@@ -72,7 +72,7 @@ public class FileUtilities
 	}
 
 
-	public static ArrayList<Share> getFolderShares()
+	public static ArrayList<Share> getFolderShares(String path)
 	{
 		String[] pathnames;
 		ArrayList<Share> shares = new ArrayList<>();
@@ -86,7 +86,7 @@ public class FileUtilities
 
 			Share share = null;
 			try {
-				share = (Share) getObject("C:/temp/secret" + "/" + pathname);
+				share = (Share) getObject(path + "/" + pathname);
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
@@ -99,4 +99,8 @@ public class FileUtilities
 		return shares;
 	}
 
+	public static boolean isEmptyFolder(String path)
+	{
+		return true;
+	}
 }

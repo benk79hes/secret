@@ -1,5 +1,13 @@
 # Shamir’s secret sharing
 
+## Utilisation
+
+Le programme génère un secret, des métadonnées et les parts dans des fichiers
+dans un répertoire
+
+
+## Donnée de base
+
 Écrire un logiciel permettant le partage d’un secret (*Shamir's secret
 sharing* étudié pendant le cours). Le secret est une chaîne de bits
 aléatoires (on peut supposer que ce nombre est un multiple de 8). Ce

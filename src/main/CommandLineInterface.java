@@ -19,7 +19,9 @@ public class CommandLineInterface
 		System.out.println("------------------------------------------------------");
 		System.out.println("Choisir une option et valider par <enter>");
 		System.out.println("1 - Générer un secret");
-		System.out.println("2 - Gérer un secret existant");
+		System.out.println("2 - Retrouver un secret existant");
+		System.out.println("3 - Ajouter une part pour un secret existant");
+		System.out.println("4 - Regénérer les parts pour un secret existant (départ employé)");
 
 		do {
 			System.out.print("Option: ");
@@ -46,18 +48,18 @@ public class CommandLineInterface
 
 		//choix de bits
 
-		System.out.println("Veuillez écrire le nombre de bits voulu");
-		System.out.println("128 bites");
-		System.out.println("256 bites");
-		System.out.println("512 bites");
-		System.out.println("4096 bites");
+		System.out.println("Veuillez choisir le nombre de bits");
+		System.out.println("128  - 128 bits");
+		System.out.println("256  - 256 bits");
+		System.out.println("512  - 512 bits");
+		System.out.println("4096 - 4096 bits");
 		do {
-			System.out.print("Option: ");
+			System.out.print("Nombre de bits: ");
 			nbBites = readCommandInt();
 		}
 		while (Arrays.binarySearch(biteOptions, nbBites) < 0);
 
-		System.out.println(nbBites);
+		// System.out.println(nbBites);
 
 		//choix de nombre de personnes
 
@@ -75,27 +77,47 @@ public class CommandLineInterface
 
 		//choix nombre de parts de secret voulue
 
-		System.out.println("Choisissez le nombre de part de secret voulu:");
+		System.out.println("Choisissez le nombre de part de secret voulu");
 
 
 		int nbParts = 0;
 
 		do {
-			System.out.println("Nombre de parts :");
+			System.out.print("Nombre de parts: ");
 			nbParts = readCommandInt();
 		}
 		while (nbParts < nbPersonnes);
 
 
+		/**
+		 * Choix du répertoire de travail
+		 */
+		String path = null;
+		System.out.println("Choisissez le répertoire où créer les fichiers");
+
+		path = "C:/temp/secret";
+		/*
+		do {
+			System.out.print("Répertoire: ");
+			path = readCommandString();
+		}
+		while (!isEmptyFolder(path)); */
 
 
-		Secret s = new Secret(nbBites / 8, nbPersonnes, nbParts);
+		Secret s = new Secret(path, nbBites / 8, nbPersonnes, nbParts);
 		s.generateSecret();
-		/* for (int i = 1; i <= nbParts; i++) {
-			s.makeNewPoint(BigInteger.valueOf(i));
-		} */
 
 
+		System.out.println("");
+
+		System.out.println("Les fichiers du secret ont été créés dans le repertoire " + path);
+		System.out.println("Tout fichier nommé 'secret.*' contient le secret et doit être détruit après utilisation.");
+		System.out.println("Le fichier 'meta.smd' contient les métadonnées nécessaires à retrouver le secret.");
+		System.out.println("Les fichier 'share*.ssh' contiennent les parts à distribuer");
+		System.out.println("");
+		System.out.println("VEILLEZ A UTILISER CORRECTEMENT CES FICHIERS POUR LA SECURITE DE VOTRE SECRET!");
+		System.out.println("");
+		System.out.println("Pour retrouver le secret vous devrez créer un répertoire avec les parts minimum requises ainsi que les métadonnées");
 	}
 
 
@@ -121,7 +143,7 @@ public class CommandLineInterface
 		} */
 
 		Secret s = new Secret(path);
-		s.find();
+		s.findSecret();
 
 		//s.find();
 	}
