@@ -12,7 +12,7 @@ public class CommandLineInterface
 	public static void showMainMenu()
 	{
 		int option;
-		int[] options = {1, 2};
+		int[] options = {1, 2, 3, 4};
 
 
 		System.out.println("Bienvenue sur l'application de protection de secrets");
@@ -35,6 +35,12 @@ public class CommandLineInterface
 				break;
 			case 2:
 				getSecretMenu();
+				break;
+			case 3:
+				addShareMenu();
+				break;
+			case 4:
+				regenerateSharesMenu();
 				break;
 		}
 	}
@@ -92,19 +98,20 @@ public class CommandLineInterface
 		/**
 		 * Choix du répertoire de travail
 		 */
-		String path = null;
-		System.out.println("Choisissez le répertoire où créer les fichiers");
+		String path = "";
+		System.out.println("Choisissez le répertoire où créer les fichiers (il doit être vide)");
 
-		path = "C:/temp/secret";
-		/*
 		do {
 			System.out.print("Répertoire: ");
 			path = readCommandString();
 		}
-		while (!isEmptyFolder(path)); */
+		while (!validateEmptyFolder(path));
 
 
 		Secret s = new Secret(path, nbBites / 8, nbPersonnes, nbParts);
+
+
+
 		s.generateSecret();
 
 
@@ -125,28 +132,94 @@ public class CommandLineInterface
 	{
 		System.out.println("Indiquez le répertoire contenant les fichiers meta ainsi que les parts de secret");
 
-		String path = "C:/temp/secret";
-		// Metadata md = null;
-/*
+		String path = "";
+
+
 		do {
 			System.out.print("Dossier: ");
 			path = readCommandString();
 		}
-		while (! validSecretPath(path));*/
+		while (! validSecretPath(path));
 
-/*		try {
-			md = getData(path);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} */
 
 		Secret s = new Secret(path);
-		s.findSecret();
 
-		//s.find();
+
+		try {
+			s.findSecret();
+			s.saveSecret();
+		} catch (MissingSharesException e) {
+			System.out.println("Le dossier ne contient pas assez de part de secret!");
+			System.out.println("Bye");
+			return;
+		}
+
+		System.out.println("Le secret a été enregistré dans le dossier!");
 	}
+
+
+	public static void regenerateSharesMenu()
+	{
+		System.out.println("Indiquez le répertoire contenant les fichiers meta ainsi que les parts de secret");
+
+		String path = "";
+
+
+		do {
+			System.out.print("Dossier: ");
+			path = readCommandString();
+		}
+		while (! validSecretPath(path));
+
+
+		Secret s = new Secret(path);
+
+
+		try {
+			s.findSecret();
+
+		} catch (MissingSharesException e) {
+			System.out.println("Le dossier ne contient pas assez de part de secret!");
+			System.out.println("Bye");
+			return;
+		}
+
+		s.generateMainFunction();
+		s.generateShares();
+
+		System.out.println("Les nouvelles parts on été créées");
+	}
+
+
+	public static void addShareMenu()
+	{
+		System.out.println("Indiquez le répertoire contenant les fichiers meta ainsi que les parts de secret");
+
+		String path = "";
+
+
+		do {
+			System.out.print("Dossier: ");
+			path = readCommandString();
+		}
+		while (! validSecretPath(path));
+
+
+		Secret s = new Secret(path);
+
+
+		try {
+			s.createNewShare();
+
+		} catch (MissingSharesException e) {
+			System.out.println("Le dossier ne contient pas assez de part de secret!");
+			System.out.println("Bye");
+			return;
+		}
+
+		System.out.println("La nouvelle part a été enregistré dans le dossier et les metadonnées mises à jour!");
+	}
+
 
 	public static String readCommandString()
 	{
@@ -155,10 +228,26 @@ public class CommandLineInterface
 		return command;
 	}
 
+
 	public static int readCommandInt()
 	{
 		Scanner scanner = new Scanner(System.in);
 		int command = scanner.nextInt();
 		return command;
+	}
+
+	private static boolean validateEmptyFolder(String path)
+	{
+		if (!folderExists(path)) {
+			System.out.println("Le dossier '" + path + "' n'existe pas.");
+			return false;
+		}
+
+		if (!isEmptyFolder(path)) {
+			System.out.println("Le dossier '" + path + "' n'est pas vide.");
+			return false;
+		}
+
+		return true;
 	}
 }

@@ -55,25 +55,42 @@ public class Secret
 		while (!validSecret(secret));
 
 		//
-		saveData("secret.bin.shs", secret);
-		saveData("secret.bin.shs", secret);
+		saveSecret();
 
 		generateMainFunction();
 		generateShares();
 	}
 
 
-	public BigInteger findSecret()
+	public void findSecret() throws MissingSharesException
 	{
 		ArrayList<Share> shares = getFolderShares(path);
-		return computeYLagrange (BigInteger.ZERO, shares);
+		if (shares.size() < metadata.level)
+			throw new MissingSharesException();
+
+		secret = computeYLagrange(BigInteger.ZERO, shares);
+
+	}
+
+	public void saveSecret()
+	{
+		saveData("secret.bin.shs", secret);
 	}
 
 
-	public void createNewShare()
+	public void createNewShare() throws MissingSharesException
 	{
 		ArrayList<Share> shares = getFolderShares(path);
-		computeYLagrange (BigInteger.ZERO, shares);
+		if (shares.size() < metadata.level)
+			throw new MissingSharesException();
+
+		metadata.shares++;
+
+		Share share = new Share();
+		share.setX(BigInteger.valueOf(metadata.shares));
+		share.setY(computeYLagrange (share.getX(), shares));
+		saveData("new.share." + metadata.shares + ".ssh", share);
+		saveData("meta.smd", metadata);
 	}
 
 
@@ -100,7 +117,7 @@ public class Secret
 	/**
 	 * Génère les coefficients de la fonction polynomiale
 	 */
-	private void generateMainFunction()
+	public void generateMainFunction()
 	{
 		coeff.add(secret);
 
@@ -115,7 +132,7 @@ public class Secret
 	}
 
 
-	private void generateShares()
+	public void generateShares()
 	{
 		for (int i = 1; i <= metadata.shares; i++) {
 			makeNewShare(BigInteger.valueOf(i));
@@ -180,7 +197,6 @@ public class Secret
 			result = result.add(rv.multiply(shares.get(i).getY())).mod(metadata.base);
 		}
 
-		//System.out.println(result.toString());
 		return result;
 	}
 

@@ -3,6 +3,7 @@ package main;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -28,7 +29,7 @@ public class FileUtilities
 
 	public static boolean validSecretPath(String path)
 	{
-		File f = new File(path + "/metadata.shs");
+		File f = new File(path + "/meta.smd");
 		return f.exists();
 	}
 
@@ -76,7 +77,7 @@ public class FileUtilities
 	{
 		String[] pathnames;
 		ArrayList<Share> shares = new ArrayList<>();
-		File f = new File("C:/temp/secret");
+		File f = new File(path);
 		pathnames = f.list();
 
 		for (String pathname : pathnames) {
@@ -96,11 +97,28 @@ public class FileUtilities
 			shares.add(share);
 			System.out.println(pathname);
 		}
+
 		return shares;
+	}
+
+	public static boolean folderExists(String path)
+	{
+		File file = new File(path);
+
+		boolean exists = file.exists();
+
+		if (! exists)
+			return false;
+
+		return file.isDirectory();
 	}
 
 	public static boolean isEmptyFolder(String path)
 	{
-		return true;
+		String[] pathnames;
+		File f = new File(path);
+		pathnames = f.list();
+
+		return pathnames.length == 0;
 	}
 }
