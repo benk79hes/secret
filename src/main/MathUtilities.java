@@ -77,8 +77,8 @@ class MathUtilities
 				BigInteger xi = shares.get(i).getX();
 				BigInteger xj = shares.get(j).getX();
 
-				BigInteger inv = modularSubstract(xi, xj, base).modInverse(base);
-				//BigInteger inv = multipleInverse(modularSubstract(xi, xj, base), base);
+				//BigInteger inv = modularSubstract(xi, xj, base).modInverse(base);
+				BigInteger inv = multipleInverse(base, modularSubstract(xi, xj, base));
 
 				rv = rv.multiply(modularSubstract(x, xj, base)).multiply(inv).mod(base);
 			}

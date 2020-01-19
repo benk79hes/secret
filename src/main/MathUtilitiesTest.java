@@ -13,13 +13,13 @@ class MathUtilitiesTest {
     @Test
     public void multipleInverseTest() {
 
-        int base = 229;
+        int base = 13;
         BigInteger a;
 
 
         for (int i = 1; i < base; i++) {
             a = BigInteger.valueOf(i);
-            assertEquals(BigInteger.valueOf(base).modInverse(a), MathUtilities.multipleInverse(a, BigInteger.valueOf(base)));
+            assertEquals(a.modInverse(BigInteger.valueOf(base)), MathUtilities.multipleInverse(BigInteger.valueOf(base), a));
         }
     }
 
