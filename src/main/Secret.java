@@ -20,6 +20,10 @@ public class Secret
 
 	private ArrayList<BigInteger> coeff = new ArrayList<>() ;
 
+	public Secret()
+	{
+
+	}
 
 	public Secret(String path, int byteLength, int level, int shares)
 	{
@@ -69,7 +73,6 @@ public class Secret
 			throw new MissingSharesException();
 
 		secret = computeYLagrange(BigInteger.ZERO, shares, metadata.base);
-
 	}
 
 	public void saveSecret()

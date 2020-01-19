@@ -12,7 +12,32 @@ class MathUtilitiesTest {
 
     @Test
     public void multipleInverseTest() {
-        BigInteger a = BigInteger.probablePrime(128,new Random());
-        assertEquals(BigInteger.TEN.modInverse(a), MathUtilities.multipleInverse(a, BigInteger.TEN));
+
+        int base = 229;
+        BigInteger a;
+
+
+        for (int i = 1; i < base; i++) {
+            a = BigInteger.valueOf(i);
+            assertEquals(BigInteger.valueOf(base).modInverse(a), MathUtilities.multipleInverse(a, BigInteger.valueOf(base)));
+        }
+    }
+
+    @Test
+    void computeY ()
+    {
+        int[] coeff = {9,14,3,10};
+
+        int[][] points = {
+                {0, 9},
+                {1, 2},
+                {2, 10},
+                {3, 8},
+                {4, 5}
+        };
+
+        for (int i = 0; i < points.length; i++) {
+            assertEquals(MathUtilities.computeY(points[i][0], coeff, 17), points[i][1]);
+        }
     }
 }

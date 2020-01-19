@@ -77,8 +77,8 @@ class MathUtilities
 				BigInteger xi = shares.get(i).getX();
 				BigInteger xj = shares.get(j).getX();
 
-				//BigInteger inv = modularSubstract(xi, xj, base).modInverse(base);
-				BigInteger inv = multipleInverse(modularSubstract(xi, xj, base), base);
+				BigInteger inv = modularSubstract(xi, xj, base).modInverse(base);
+				//BigInteger inv = multipleInverse(modularSubstract(xi, xj, base), base);
 
 				rv = rv.multiply(modularSubstract(x, xj, base)).multiply(inv).mod(base);
 			}
@@ -106,4 +106,35 @@ class MathUtilities
 
 		return result;
 	}
+
+	public static int getRandomBetween(int min, int max)
+	{
+		double randomDouble = Math.random();
+
+		int rangeWidth = max - min + 1;
+
+		return (int)(randomDouble * rangeWidth) + min;
+	}
+
+
+
+	public static int computeY(int x, int[] coeff, int base)
+	{
+		int y;
+
+		y = 0;
+
+		/**
+		 * @todo Replace with Horner
+		 */
+		for (int i = 0; i < coeff.length; i++) {
+			//System.out.println(y);
+			//System.out.println("x ^ i" + (x ^ i));
+			int c = coeff[i];
+			y = y + c * (int)Math.pow(x, i);
+		}
+
+		return y % base;
+	}
+
 }
